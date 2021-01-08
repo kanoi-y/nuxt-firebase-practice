@@ -1,8 +1,12 @@
 import firebase from "~/plugins/firebase";
 
+const db = firebase.firestore();
+const todoRef = db.collection("todos");
+
 export const state = () => ({
   userUid: "",
-  userName: ""
+  userName: "",
+  todos: []
 });
 
 export const mutations = {
@@ -11,6 +15,12 @@ export const mutations = {
   },
   setUserName(state, userName) {
     state.userName = userName;
+  },
+  addTodo(state, todo) {
+    state.todos.push(todo);
+  },
+  clearTodo(state) {
+    state.todos = [];
   }
 };
 
@@ -31,6 +41,34 @@ export const actions = {
         var errorCode = error.code;
         console.log("error : " + errorCode);
       });
+  },
+  fetchTodos({ commit }) {
+    todoRef
+      .get()
+      .then(res => {
+        res.forEach(doc => {
+          console.log("success : " + `${doc.id} => ${doc.data()}`);
+          commit("addTodo", doc.data());
+        });
+      })
+      .catch(error => {
+        console.log("error : " + error);
+      });
+  },
+  addTodo({ commit }, todo) {
+    console.log(todo);
+    todoRef
+      .add({
+        todo: todo.todo,
+        limit: todo.limit
+      })
+      .then(function(docRef) {
+        console.log("Document written with ID: ", docRef.id);
+        commit("addTodo", todo);
+      })
+      .catch(function(error) {
+        console.error("Error adding document: ", error);
+      });
   }
 };
 
@@ -40,5 +78,8 @@ export const getters = {
   },
   getUserName(state) {
     return state.userName;
+  },
+  getTodos(state) {
+    return state.todos;
   }
 };
